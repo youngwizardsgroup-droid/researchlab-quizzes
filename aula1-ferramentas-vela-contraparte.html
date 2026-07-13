@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferramentas, Vela Japonesa e Contraparte — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #F0B23222;
+    color: #F0B232;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #F0B232; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #F0B23266; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #F0B232;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#F0B232 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 1 · Quiz de Revisão</span>
+  <h1>Ferramentas, Vela Japonesa e Contraparte</h1>
+  <p class="subtitle">12 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 1: as ferramentas básicas do trader, como ler uma vela japonesa, e quem está do outro lado de cada ordem que envias ao mercado.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "Para que serve o TradingView?",
+    "opts": [
+      "Para enviar ordens diretamente à corretora",
+      "Para ver gráficos, desenhar níveis e fazer a análise do mercado",
+      "Para calcular impostos sobre os lucros",
+      "Para conversar com outros traders"
+    ],
+    "a": 1,
+    "exp": "O TradingView é a plataforma de gráficos e análise — é onde o trader passa mais tempo: vendo o preço em tempo real, desenhando níveis e estudando o mercado."
+  },
+  {
+    "q": "E o MetaTrader (MT4/MT5), para que serve?",
+    "opts": [
+      "Só para ver notícias económicas",
+      "Para desenhar níveis mais bonitos que o TradingView",
+      "Para executar as ordens: comprar, vender, definir stop loss e take profit",
+      "Para copiar operações de outros traders automaticamente"
+    ],
+    "a": 2,
+    "exp": "O MetaTrader é a plataforma de execução, ligada à corretora. É onde as ordens são realmente enviadas ao mercado e onde acompanhamos as posições abertas."
+  },
+  {
+    "q": "Qual é a relação entre análise e execução?",
+    "opts": [
+      "São a mesma coisa, sempre na mesma plataforma",
+      "São coisas separadas — podemos analisar no TradingView e executar no MetaTrader",
+      "A execução deve ser feita antes da análise",
+      "Quem analisa não precisa de executar"
+    ],
+    "a": 1,
+    "exp": "Análise e execução são funções separadas. É comum (e recomendado) analisar numa plataforma de gráficos como o TradingView e executar as ordens no MetaTrader, ligado à corretora."
+  },
+  {
+    "q": "Como é que uma vela japonesa se forma?",
+    "opts": [
+      "Aparece já completa no gráfico, desenhada pela corretora",
+      "Abre num preço, vai-se desenhando enquanto o período corre, e congela quando o período fecha",
+      "É desenhada manualmente pelo trader",
+      "Forma-se só quando há uma notícia importante"
+    ],
+    "a": 1,
+    "exp": "A vela nasce quando o período começa (abertura), estica-se para cima e para baixo enquanto o preço se move, e quando o período termina ela fecha e fica congelada — e uma nova vela começa."
+  },
+  {
+    "q": "Quais são as 4 informações que cada vela japonesa mostra?",
+    "opts": [
+      "Compra, venda, lucro e prejuízo",
+      "Abertura, fecho, máxima e mínima",
+      "Tendência, momentum, volume e liquidez",
+      "Hora, data, sessão e corretora"
+    ],
+    "a": 1,
+    "exp": "Cada vela resume um período de tempo com 4 dados: onde o preço abriu, onde fechou, o ponto mais alto (máxima) e o mais baixo (mínima) que atingiu."
+  },
+  {
+    "q": "O que é o CORPO da vela?",
+    "opts": [
+      "A distância entre a máxima e a mínima",
+      "A linha fina acima da vela",
+      "A parte grossa, que vai da abertura ao fecho",
+      "O volume negociado no período"
+    ],
+    "a": 2,
+    "exp": "O corpo é a parte grossa da vela: vai do preço de abertura ao preço de fecho. As linhas finas acima e abaixo são os pavios (ou sombras)."
+  },
+  {
+    "q": "O que significa uma vela VERDE?",
+    "opts": [
+      "O preço fechou acima de onde abriu — os compradores dominaram",
+      "O preço fechou abaixo de onde abriu — os vendedores dominaram",
+      "O mercado estava fechado naquele período",
+      "Houve pouco volume naquele período"
+    ],
+    "a": 0,
+    "exp": "Vela verde (ou branca) = fecho acima da abertura → os compradores venceram aquele período. Vela vermelha = fecho abaixo da abertura → os vendedores dominaram."
+  },
+  {
+    "q": "Uma vela com um pavio grande EM CIMA e corpo pequeno sugere o quê?",
+    "opts": [
+      "Que os compradores dominaram com força total",
+      "Que o preço tentou subir mas foi rejeitado pelos vendedores",
+      "Que o mercado vai subir com certeza na próxima vela",
+      "Que houve um erro no gráfico"
+    ],
+    "a": 1,
+    "exp": "O pavio mostra até onde o preço chegou mas não conseguiu ficar. Pavio grande em cima = o preço subiu, mas os vendedores empurraram de volta — a subida foi rejeitada."
+  },
+  {
+    "q": "Uma vela sozinha, fora de contexto, é suficiente para decidir uma entrada?",
+    "opts": [
+      "Sim, se for uma vela de rejeição",
+      "Sim, se o corpo for muito grande",
+      "Não — o padrão só ganha significado dependendo de ONDE aparece e do que veio antes",
+      "Sim, desde que seja no gráfico diário"
+    ],
+    "a": 2,
+    "exp": "Uma vela isolada não diz quase nada. O mesmo padrão pode significar coisas opostas em sítios diferentes do gráfico. Contexto primeiro, padrão depois."
+  },
+  {
+    "q": "O que é a CONTRAPARTE?",
+    "opts": [
+      "A comissão que a corretora cobra",
+      "Quem está do outro lado da nossa ordem — quando compramos, alguém está a vender para nós",
+      "A segunda operação do dia",
+      "O stop loss da operação"
+    ],
+    "a": 1,
+    "exp": "O mercado é uma troca: para cada comprador tem que existir um vendedor. Quando clicas em COMPRAR, alguém está a VENDER para ti nesse exato momento — essa é a tua contraparte."
+  },
+  {
+    "q": "Por que o preço se move?",
+    "opts": [
+      "Porque as corretoras decidem o preço a cada hora",
+      "Porque os indicadores empurram o preço",
+      "Por desequilíbrio: mais agressão de um lado do que o outro lado consegue absorver",
+      "Por causa do horário de verão"
+    ],
+    "a": 2,
+    "exp": "O preço só se move quando há desequilíbrio entre compradores e vendedores: se há mais gente a querer comprar do que vendedores àquele preço, o preço sobe até encontrar vendedores — e vice-versa."
+  },
+  {
+    "q": "Por que as operações dos big players deixam “rasto” no gráfico?",
+    "opts": [
+      "Porque eles são obrigados a anunciar as operações nas notícias",
+      "Porque movem posições tão grandes que precisam de contraparte em volume — e esse encontro de ordens forma as velas que vemos",
+      "Porque usam uma plataforma diferente da nossa",
+      "Não deixam rasto — é impossível ver o que eles fazem"
+    ],
+    "a": 1,
+    "exp": "Os big players não conseguem comprar tudo o que querem sem alguém disposto a vender essa quantidade. O encontro dessas ordens gigantes com a contraparte aparece no gráfico: pavios de rejeição, corpos grandes, zonas onde o preço trava."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>
