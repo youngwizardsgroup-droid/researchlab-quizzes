@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Longo Prazo e Automação — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #43B58122;
+    color: #43B581;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #43B581; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #43B58166; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #43B581;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#43B581 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 2 · Quiz de Revisão</span>
+  <h1>Longo Prazo e Automação</h1>
+  <p class="subtitle">10 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 2: a diferença entre trading e investimento, como funcionam as ações, o portfólio da comunidade e o sistema automatizado Auction Dynamics.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "Qual é a principal diferença entre trading e investimento?",
+    "opts": [
+      "Trading é curto prazo e especulação; investimento é longo prazo e ser dono de parte de uma empresa",
+      "Trading é seguro; investimento é arriscado",
+      "São exatamente a mesma coisa com nomes diferentes",
+      "Investimento é só para ricos; trading é para todos"
+    ],
+    "a": 0,
+    "exp": "Trading: curto prazo, especulação sobre o preço, decisão manual constante. Investimento: longo prazo, ser dono de parte de uma empresa, paciência e poucas decisões."
+  },
+  {
+    "q": "O que é uma ação?",
+    "opts": [
+      "Um empréstimo que fazemos a uma empresa",
+      "Uma parte (fração) de uma empresa — quem compra torna-se sócio",
+      "Uma moeda digital emitida por empresas",
+      "Um contrato de trabalho com a empresa"
+    ],
+    "a": 1,
+    "exp": "Uma ação é uma parte de uma empresa. Quem compra uma ação torna-se dono de uma fração dessa empresa."
+  },
+  {
+    "q": "Quais são as duas formas de uma ação pagar o investidor?",
+    "opts": [
+      "Juros fixos e comissões",
+      "Salário e bónus anual",
+      "Dividendos e valorização do preço",
+      "Cashback e descontos em produtos"
+    ],
+    "a": 2,
+    "exp": "1) Dividendos — parte do lucro da empresa distribuído aos acionistas; 2) Valorização — o preço da ação sobe conforme a empresa cresce."
+  },
+  {
+    "q": "O que são dividendos?",
+    "opts": [
+      "Parte do lucro da empresa distribuído aos acionistas",
+      "A taxa que se paga à corretora",
+      "O valor da ação no momento da compra",
+      "Um imposto sobre investimentos"
+    ],
+    "a": 0,
+    "exp": "Dividendos são a parte do lucro que a empresa distribui a quem tem as suas ações. É uma das duas formas de a ação pagar o investidor."
+  },
+  {
+    "q": "O que move o preço de uma ação?",
+    "opts": [
+      "Apenas a sorte",
+      "Resultados da empresa, setor/macroeconomia e sentimento de mercado",
+      "Só as decisões do dono da empresa",
+      "O número de pessoas que fala dela nas redes sociais"
+    ],
+    "a": 1,
+    "exp": "Três fatores principais: os resultados da empresa (lucros, crescimento), o setor e a macroeconomia, e o sentimento de mercado."
+  },
+  {
+    "q": "Em que plataforma está o portfólio de longo prazo da comunidade?",
+    "opts": [
+      "Binance",
+      "MetaTrader 5",
+      "Trading212",
+      "Interactive Brokers"
+    ],
+    "a": 2,
+    "exp": "O portfólio está na Trading212, com transparência total — as posições reais são mostradas à comunidade e o link está fixado no Discord."
+  },
+  {
+    "q": "Qual é o horizonte de tempo do portfólio de ações da comunidade?",
+    "opts": [
+      "Alguns dias",
+      "Algumas semanas",
+      "Meses",
+      "Anos — crescimento no longo prazo"
+    ],
+    "a": 3,
+    "exp": "O objetivo é crescimento no longo prazo, com horizonte de anos. Paciência e poucas decisões — o oposto do trading de curto prazo."
+  },
+  {
+    "q": "O que é o Auction Dynamics?",
+    "opts": [
+      "Um curso pago de trading",
+      "Um sistema automatizado (robô) que segue regras e opera XAUUSD",
+      "Um grupo de sinais no Telegram",
+      "Um indicador para o TradingView"
+    ],
+    "a": 1,
+    "exp": "O Auction Dynamics é um robô que segue regras e opera XAUUSD (Ouro), a correr na corretora Vantage. É possível copiá-lo via copy trading."
+  },
+  {
+    "q": "Sobre o copy trading do sistema automatizado, o que é verdade?",
+    "opts": [
+      "É garantia de lucro todos os meses",
+      "Nunca tem períodos de perda",
+      "Não é garantia de lucro e o drawdown real existe",
+      "Só funciona com contas acima de 100.000€"
+    ],
+    "a": 2,
+    "exp": "Aviso importante da aula: copy trading NÃO é garantia de lucro e o drawdown real existe — haverá períodos de perda. Transparência acima de tudo."
+  },
+  {
+    "q": "Quais são os 3 pilares da comunidade?",
+    "opts": [
+      "Sinais, apostas e sorte",
+      "Trading manual, investimento em ações e automação/copy trading",
+      "Forex, cripto e imóveis",
+      "Análise técnica, fundamental e astrológica"
+    ],
+    "a": 1,
+    "exp": "Os 3 pilares: trading manual (operar com análise própria), investimento em ações (património no longo prazo) e automação/copy trading (sistemas por regras)."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>

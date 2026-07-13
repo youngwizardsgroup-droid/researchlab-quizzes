@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquidez, Indicadores e Horários — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #F0B23222;
+    color: #F0B232;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #F0B232; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #F0B23266; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #F0B232;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#F0B232 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 3 · Quiz de Revisão</span>
+  <h1>Liquidez, Indicadores e Horários</h1>
+  <p class="subtitle">12 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 3: o que é liquidez, as famílias de indicadores, e como as sessões do mercado mudam a qualidade dos movimentos ao longo do dia.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "O que é liquidez?",
+    "opts": [
+      "A quantidade de dinheiro que temos na conta",
+      "A quantidade de gente pronta para comprar e vender um ativo naquele momento",
+      "A velocidade da internet da corretora",
+      "O valor total de um ativo no mercado"
+    ],
+    "a": 1,
+    "exp": "Liquidez é a quantidade de participantes prontos para comprar e vender naquele momento. Como vender um carro popular (rápido, preço justo) vs. um carro raro (demora, talvez com desconto)."
+  },
+  {
+    "q": "Num mercado com ALTA liquidez, o que acontece?",
+    "opts": [
+      "O preço salta bruscamente com pouco volume",
+      "É impossível entrar em posições",
+      "O preço move-se de forma mais suave e é fácil entrar/sair sem pagar caro",
+      "O mercado fecha mais cedo"
+    ],
+    "a": 2,
+    "exp": "Alta liquidez = muitos compradores e vendedores ao mesmo tempo. O preço move-se de forma mais suave e entrar/sair de posições custa menos."
+  },
+  {
+    "q": "E num mercado com BAIXA liquidez?",
+    "opts": [
+      "O preço pode saltar bruscamente, com picos e reversões estranhas",
+      "Os movimentos ficam mais previsíveis",
+      "As corretoras pagam menos comissões",
+      "Só os traders profissionais podem operar"
+    ],
+    "a": 0,
+    "exp": "Com poucos participantes, não há gente suficiente do outro lado para absorver as ordens — o preço salta bruscamente e faz movimentos imprevisíveis."
+  },
+  {
+    "q": "Por que é arriscado operar num horário de baixa liquidez?",
+    "opts": [
+      "Porque as comissões são mais altas",
+      "Porque o preço pode mover-se de forma imprevisível contra nós, mesmo com a análise certa",
+      "Porque a corretora bloqueia a conta",
+      "Não há risco nenhum, é igual a qualquer horário"
+    ],
+    "a": 1,
+    "exp": "Mesmo que a análise esteja certa, com baixa liquidez o preço pode fazer movimentos erráticos contra a posição. A qualidade do sinal cai e o ruído aumenta."
+  },
+  {
+    "q": "O que é um indicador técnico?",
+    "opts": [
+      "Uma previsão exata do futuro do preço",
+      "Um sinal enviado pela corretora para comprar ou vender",
+      "Uma fórmula matemática aplicada ao preço que organiza informação que JÁ aconteceu",
+      "Uma notícia económica importante"
+    ],
+    "a": 2,
+    "exp": "Um indicador transforma o histórico de preços em algo mais fácil de visualizar (linha, número, cor). Ele não prevê o futuro — organiza o que já aconteceu."
+  },
+  {
+    "q": "Quais são as 3 grandes famílias de indicadores?",
+    "opts": [
+      "Rápidos, médios e lentos",
+      "Tendência, momentum e volume",
+      "Compra, venda e neutros",
+      "Diários, semanais e mensais"
+    ],
+    "a": 1,
+    "exp": "Tendência (Média Móvel, MACD), Momentum (RSI, Estocástico) e Volume (Volume simples, CVD). Cada família responde a uma pergunta diferente."
+  },
+  {
+    "q": "Para que serve uma Média Móvel?",
+    "opts": [
+      "Medir quantos contratos foram negociados",
+      "Suavizar o preço para ver a tendência sem o ruído de curto prazo",
+      "Prever exatamente onde o preço vai reverter",
+      "Calcular o lucro de uma operação"
+    ],
+    "a": 1,
+    "exp": "A Média Móvel calcula a média do preço nos últimos X períodos. Preço acima da média sugere tendência de alta; abaixo, de baixa. É “suavizar” o preço."
+  },
+  {
+    "q": "O que medem o RSI e o Estocástico?",
+    "opts": [
+      "O volume real negociado",
+      "A hora de abertura das sessões",
+      "Se o movimento está “esticado” (sobrecomprado/sobrevendido)",
+      "O spread da corretora"
+    ],
+    "a": 2,
+    "exp": "São indicadores de momentum: medem a força e velocidade do movimento recente, para ver se está esticado demais (risco de pausa ou correção)."
+  },
+  {
+    "q": "O que mostra o CVD (Delta de Volume Acumulado)?",
+    "opts": [
+      "Se quem está a comprar ou vender está realmente a “vencer” a disputa",
+      "O horário de maior liquidez do dia",
+      "A média do preço dos últimos 10 períodos",
+      "O número de traders online"
+    ],
+    "a": 0,
+    "exp": "O CVD mede se a agressão (compradora ou vendedora) está realmente a mover o preço. Se o preço sobe mas o volume comprador é fraco, o movimento pode não ter força real."
+  },
+  {
+    "q": "Um indicador sozinho deve decidir a nossa entrada?",
+    "opts": [
+      "Sim, se for o RSI",
+      "Sim, desde que seja em timeframe alto",
+      "Não — indicadores servem para CONFIRMAR uma leitura, não para decidir sozinhos",
+      "Sim, os indicadores preveem o mercado"
+    ],
+    "a": 2,
+    "exp": "Nenhum indicador prevê o mercado — todos são baseados no que já aconteceu. Servem para confirmar o contexto. Usar um isolado, sem contexto, leva a decisões erradas."
+  },
+  {
+    "q": "Quais são as 4 sessões principais do mercado, pela ordem em que abrem?",
+    "opts": [
+      "Nova Iorque → Londres → Tóquio → Sydney",
+      "Sydney → Tóquio → Londres → Nova Iorque",
+      "Londres → Sydney → Nova Iorque → Tóquio",
+      "Tóquio → Nova Iorque → Sydney → Londres"
+    ],
+    "a": 1,
+    "exp": "O mercado funciona 24h/dia, 5 dias por semana, porque as praças vão abrindo conforme o relógio gira: Sydney (~23h), Tóquio (~01h), Londres (~08h) e Nova Iorque (~13h, hora de Portugal)."
+  },
+  {
+    "q": "Qual é o momento de MAIOR liquidez do dia inteiro?",
+    "opts": [
+      "A madrugada, quando só Sydney está aberta",
+      "O fim de semana",
+      "O overlap Londres + Nova Iorque (~13h–17h, hora de Portugal)",
+      "A primeira hora da sessão de Tóquio"
+    ],
+    "a": 2,
+    "exp": "Quando Londres e Nova Iorque estão abertas ao mesmo tempo há gente do mundo inteiro a operar — os movimentos mais fortes e “limpos” do dia acontecem nesse overlap."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>

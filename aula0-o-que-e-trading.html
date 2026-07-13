@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O que é Trading (Introdução) — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #5865F222;
+    color: #5865F2;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #5865F2; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #5865F266; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #5865F2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#5865F2 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 0 · Quiz de Revisão</span>
+  <h1>O que é Trading (Introdução)</h1>
+  <p class="subtitle">10 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 0. Cada pergunta tem uma resposta certa e explicação. Errar faz parte — o objetivo é fixar os conceitos, não acertar tudo à primeira.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "O que é trading, na sua definição mais simples?",
+    "opts": [
+      "Comprar ou vender um ativo para tentar lucrar com a variação do preço",
+      "Investir em empresas para receber dividendos ao longo de anos",
+      "Comprar ouro físico e guardar como reserva de valor",
+      "Apostar em resultados de eventos económicos"
+    ],
+    "a": 0,
+    "exp": "Trading é só isto: comprar ou vender um ativo para lucrar com a variação do preço. Exemplo: compro Ouro a 100€, sobe para 110€, vendo — ganhei 10€."
+  },
+  {
+    "q": "É possível ganhar dinheiro quando o preço está a DESCER?",
+    "opts": [
+      "Não, só se ganha quando o preço sobe",
+      "Sim — vendendo primeiro e comprando mais barato depois",
+      "Só os bancos conseguem fazer isso",
+      "Apenas em criptomoedas"
+    ],
+    "a": 1,
+    "exp": "No trading podemos vender primeiro (a um preço alto) e comprar mais barato depois. Ganha-se nas duas direções do mercado."
+  },
+  {
+    "q": "Quais são os ativos que negociamos na comunidade?",
+    "opts": [
+      "Criptomoedas e NFTs",
+      "Apenas ações de empresas tecnológicas",
+      "Ouro (XAU/USD), EUR/USD e Índices",
+      "Imóveis e matérias-primas físicas"
+    ],
+    "a": 2,
+    "exp": "Operamos Ouro (XAU/USD), EUR/USD e Índices — sempre o preço do ativo, nunca o ativo físico."
+  },
+  {
+    "q": "Quando compramos XAU/USD, o que estamos realmente a comprar?",
+    "opts": [
+      "Barras de ouro físico entregues em casa",
+      "Uma parte de uma empresa mineira de ouro",
+      "Apenas a exposição ao preço do ouro",
+      "Dólares americanos convertidos em ouro"
+    ],
+    "a": 2,
+    "exp": "Não compramos ouro físico. Estamos apenas a negociar o preço — se ele sobe ou desce depois da nossa entrada."
+  },
+  {
+    "q": "Por que é que o preço de um ativo se move?",
+    "opts": [
+      "Porque os governos definem o preço todos os dias",
+      "Porque há compradores e vendedores com objetivos diferentes",
+      "Porque os indicadores técnicos o empurram",
+      "Por sorte e aleatoriedade pura"
+    ],
+    "a": 1,
+    "exp": "O preço move-se porque há compradores e vendedores em desacordo. Bancos, empresas e traders participam no mercado com objetivos diferentes."
+  },
+  {
+    "q": "Qual destes participantes NÃO faz parte da lista dos que movem o mercado, vista na aula?",
+    "opts": [
+      "Bancos",
+      "Empresas",
+      "Traders",
+      "Influencers de redes sociais"
+    ],
+    "a": 3,
+    "exp": "Na aula vimos três grandes grupos: bancos, empresas e traders. Cada um entra no mercado com um objetivo diferente."
+  },
+  {
+    "q": "Qual é o maior erro dos iniciantes no trading?",
+    "opts": [
+      "Falta de inteligência",
+      "Não ter dinheiro suficiente para começar",
+      "Entrar sem plano, mudar de estratégia, operar por emoção e ter pressa",
+      "Não usar indicadores suficientes no gráfico"
+    ],
+    "a": 2,
+    "exp": "Não é falta de inteligência. É comportamento: entrar sem plano, mudar de estratégia todos os dias, operar por emoção e querer ganhar tudo numa semana."
+  },
+  {
+    "q": "O que é um algoritmo de trading, como explicado na aula?",
+    "opts": [
+      "Um robô que segue regras e executa quando encontra uma oportunidade",
+      "Um programa que prevê o futuro do mercado com 100% de certeza",
+      "Uma fórmula secreta que só os bancos conhecem",
+      "Um indicador que dá sinais de compra e venda"
+    ],
+    "a": 0,
+    "exp": "Um algoritmo é como um robô que segue regras. Quando encontra uma oportunidade que cumpre as regras, ele executa. Estamos a desenvolver esses robôs para a comunidade."
+  },
+  {
+    "q": "O que se espera de cada aluno da comunidade?",
+    "opts": [
+      "Operar com dinheiro real já na primeira semana",
+      "Assistir às aulas, fazer perguntas e não ter pressa",
+      "Copiar todas as operações sem questionar",
+      "Estudar 8 horas por dia"
+    ],
+    "a": 1,
+    "exp": "Apenas três coisas: assistir às aulas, fazer perguntas e não ter pressa. Ninguém precisa de saber operar amanhã."
+  },
+  {
+    "q": "Qual foi a instrução final da Aula 0, até à aula seguinte?",
+    "opts": [
+      "Abrir uma conta e começar a operar sozinho",
+      "Decorar todos os indicadores técnicos",
+      "Não tentar operar sozinho — apenas observar",
+      "Escolher já uma estratégia definitiva"
+    ],
+    "a": 2,
+    "exp": "“Não quero que tentem operar sozinhos. Quero apenas que observem.” — Não procuramos atalhos, estamos a construir uma habilidade."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>
