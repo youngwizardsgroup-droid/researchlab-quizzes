@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tendências, Área de Desconto e MetaTrader — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #F0B23222;
+    color: #F0B232;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #F0B232; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #F0B23266; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #F0B232;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#F0B232 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 4 · Quiz de Revisão</span>
+  <h1>Tendências, Área de Desconto e MetaTrader</h1>
+  <p class="subtitle">12 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 4: o que é tendência, a analogia do combustível (liquidez) e do painel (quebra de estrutura), a área de desconto, o timing certo, e como funciona o MetaTrader.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "O que é uma tendência?",
+    "opts": [
+      "Um indicador matemático aplicado ao preço",
+      "A direção geral pra onde o preço caminha ao longo do tempo — uma sequência de topos e fundos na mesma direção",
+      "O preço exato de entrada numa operação",
+      "Uma notícia económica que move o mercado"
+    ],
+    "a": 1,
+    "exp": "Tendência é o movimento de fundo do preço — como uma maré a subir na praia: nem toda onda avança, mas o padrão geral segue numa direção."
+  },
+  {
+    "q": "Por que o preço tende a CONTINUAR na mesma direção, em vez de reverter aleatoriamente?",
+    "opts": [
+      "Porque o mercado é totalmente aleatório e não há motivo real",
+      "Porque as corretoras forçam o preço a continuar",
+      "Por inércia de posicionamento, ordens acumuladas por trás do movimento, e efeito manada",
+      "Porque os indicadores técnicos controlam o preço"
+    ],
+    "a": 2,
+    "exp": "Quem já está a lucrar tende a segurar a posição, há fluxo real de compra/venda por trás do movimento, e mais gente entra a favor à medida que a tendência se confirma."
+  },
+  {
+    "q": "Na analogia do combustível, o que representa a LIQUIDEZ?",
+    "opts": [
+      "O motorista do carro",
+      "O combustível que mantém o carro (a tendência) em movimento",
+      "A estrada por onde o carro passa",
+      "O painel de instrumentos do carro"
+    ],
+    "a": 1,
+    "exp": "Liquidez é o combustível. Enquanto há liquidez a alimentar o movimento (compradores dispostos a continuar comprando), a tendência continua a andar."
+  },
+  {
+    "q": "O que acontece quando o \"combustível\" (liquidez) começa a esgotar-se?",
+    "opts": [
+      "O carro acelera ainda mais forte",
+      "Nada muda, a tendência é imune a isso",
+      "O movimento começa a perder força e desacelerar antes de travar ou reverter",
+      "O preço sobe instantaneamente para o infinito"
+    ],
+    "a": 2,
+    "exp": "Tal como um carro sem combustível desacelera antes de parar, uma tendência sem liquidez suficiente perde velocidade antes de travar ou inverter."
+  },
+  {
+    "q": "Na analogia, o que representa a QUEBRA DE ESTRUTURA?",
+    "opts": [
+      "O tanque de combustível cheio",
+      "O painel do carro, avisando que o combustível está a acabar",
+      "A velocidade máxima do carro",
+      "O destino final da viagem"
+    ],
+    "a": 1,
+    "exp": "A quebra de estrutura é o aviso mais direto e concreto de que a força que sustentava a tendência pode estar a acabar — como o ponteiro do combustível a chegar à reserva."
+  },
+  {
+    "q": "O que define uma quebra de estrutura numa tendência de alta?",
+    "opts": [
+      "O RSI ultrapassar 70",
+      "O preço faz um fundo MAIS BAIXO que o fundo anterior, pela primeira vez",
+      "O volume negociado aumentar",
+      "A Média Móvel mudar de cor"
+    ],
+    "a": 1,
+    "exp": "Numa tendência de alta, cada fundo deveria ser mais alto que o anterior. Quando isso deixa de acontecer, é sinal de que a estrutura (e possivelmente a tendência) quebrou."
+  },
+  {
+    "q": "Por que a quebra de estrutura é considerada mais direta que um indicador tradicional (Média Móvel, RSI, etc.)?",
+    "opts": [
+      "Porque é mais bonita visualmente",
+      "Porque indicadores tradicionais são cálculos derivados do preço e reagem depois do fato; a quebra de estrutura é o próprio preço a mostrar a mudança",
+      "Porque não precisa de gráfico para ser vista",
+      "Porque foi inventada mais recentemente"
+    ],
+    "a": 1,
+    "exp": "Indicadores são derivados do preço — chegam atrasados. A quebra de estrutura é o preço em si a revelar, na prática, que a disputa entre compradores e vendedores mudou de lado."
+  },
+  {
+    "q": "O que é a área de desconto?",
+    "opts": [
+      "O preço mais caro possível dentro da tendência",
+      "A zona de preço mais \"barata\" dentro de uma tendência de alta (ou mais \"cara\" numa de baixa), geralmente após uma correção",
+      "O horário em que a corretora cobra menos comissão",
+      "Um tipo de ordem no MetaTrader"
+    ],
+    "a": 1,
+    "exp": "É a zona de maior probabilidade de reação a favor da tendência principal, formada depois de um pullback — o oposto de comprar no topo do movimento."
+  },
+  {
+    "q": "Por que entrar perto do topo do movimento (perseguir o preço) é arriscado?",
+    "opts": [
+      "Porque é proibido pela corretora",
+      "Porque, na analogia, estás a comprar quando o \"tanque\" já gastou boa parte do combustível daquele impulso",
+      "Porque o MetaTrader bloqueia essas entradas",
+      "Não é arriscado, é igual a entrar em qualquer ponto"
+    ],
+    "a": 1,
+    "exp": "Perseguir o preço é entrar perto de onde o impulso já gastou boa parte da sua força — o oposto de entrar na área de desconto, mais próxima de onde a força ainda está por vir."
+  },
+  {
+    "q": "Mesmo estando na área de desconto, por que o TIMING certo ainda importa?",
+    "opts": [
+      "Não importa, basta estar na área de desconto para entrar",
+      "Porque é preciso esperar sinais de que a correção terminou antes de a tendência principal retomar",
+      "Porque o timing só importa para operações de longo prazo",
+      "Porque a área de desconto muda de preço a cada segundo"
+    ],
+    "a": 1,
+    "exp": "Entrar cedo demais, antes de sinais de que a correção terminou (ex: o preço volta a respeitar a estrutura de alta), arrisca apanhar a continuação da correção."
+  },
+  {
+    "q": "O que é o MetaTrader?",
+    "opts": [
+      "Um indicador de tendência",
+      "A plataforma usada para abrir, gerir e fechar posições no mercado, na prática",
+      "Um tipo de corretora exclusiva de ações",
+      "Um robô que opera sozinho sem supervisão"
+    ],
+    "a": 1,
+    "exp": "O MetaTrader é o app onde se vê o gráfico em tempo real, se abre posições de compra/venda, e se define lote, Stop Loss e Take Profit."
+  },
+  {
+    "q": "Por que entender a lógica da tendência ajuda quem copia as posições enviadas?",
+    "opts": [
+      "Não ajuda, copiar é sempre automático",
+      "Porque assim a pessoa entende o porquê da entrada, em vez de clicar \"comprar\" às cegas",
+      "Porque só assim o MetaTrader permite abrir a posição",
+      "Porque reduz o valor da comissão da corretora"
+    ],
+    "a": 1,
+    "exp": "Quem entende tendência, área de desconto e timing consegue acompanhar as posições enviadas com mais confiança, porque compreende a lógica por trás de cada entrada."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>
