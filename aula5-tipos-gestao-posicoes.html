@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tipos e Gestão de Posições — Quiz</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: #1e1f22;
+    color: #dbdee1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #2b2d31;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .badge {
+    display: inline-block;
+    background: #F0B23222;
+    color: #F0B232;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; color: #f2f3f5; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #949ba4; margin-bottom: 20px; }
+  .progress-track {
+    height: 6px; background: #1e1f22; border-radius: 3px; margin-bottom: 6px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%; background: #F0B232; border-radius: 3px; transition: width .3s ease;
+  }
+  .progress-label { font-size: 12px; color: #949ba4; margin-bottom: 18px; }
+  .question { font-size: 17px; font-weight: 600; color: #f2f3f5; line-height: 1.45; margin-bottom: 18px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: #383a40;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 15px;
+    color: #dbdee1;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+    line-height: 1.4;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:hover:not(:disabled) { background: #404249; border-color: #F0B23266; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #2d4435; border-color: #43b581; color: #d9f5e5; }
+  .option.wrong { background: #472d2f; border-color: #f04747; color: #ffd9d9; }
+  .option.dim { opacity: .45; }
+  .feedback {
+    display: none;
+    margin-top: 16px;
+    padding: 13px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .feedback.ok { display: block; background: #2d443522; border-left: 3px solid #43b581; }
+  .feedback.ko { display: block; background: #472d2f22; border-left: 3px solid #f04747; }
+  .feedback strong { color: #f2f3f5; }
+  .next-btn {
+    display: none;
+    margin-top: 18px;
+    width: 100%;
+    background: #F0B232;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .next-btn:hover { filter: brightness(1.1); }
+  /* Ecrã final */
+  .result { display: none; text-align: center; }
+  .result .score-ring {
+    width: 130px; height: 130px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 10px auto 18px;
+    font-size: 30px; font-weight: 800; color: #f2f3f5;
+    background: conic-gradient(#F0B232 calc(var(--pct) * 1%), #1e1f22 0);
+  }
+  .result .score-ring span {
+    background: #2b2d31; width: 104px; height: 104px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .result h2 { font-size: 20px; color: #f2f3f5; margin-bottom: 8px; }
+  .result p { font-size: 15px; color: #b5bac1; line-height: 1.5; margin-bottom: 20px; }
+  .start-screen { text-align: center; }
+  .start-screen p { font-size: 15px; color: #b5bac1; line-height: 1.6; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <span class="badge">Aula 5 · Quiz de Revisão</span>
+  <h1>Tipos e Gestão de Posições</h1>
+  <p class="subtitle">12 perguntas · feedback imediato · sem limite de tempo</p>
+
+  <div id="start" class="start-screen">
+    <p>Testa o que aprendeste na Aula 5: tipos de ordens (mercado vs. pendente), como abrir e fechar uma posição corretamente, e como gerir a operação com parciais, breakeven e ajuste do Take Profit.</p>
+    <button class="next-btn" style="display:block" onclick="startQuiz()">Começar o quiz ▸</button>
+  </div>
+
+  <div id="quiz" style="display:none">
+    <div class="progress-track"><div class="progress-fill" id="bar"></div></div>
+    <div class="progress-label" id="plabel"></div>
+    <div class="question" id="qtext"></div>
+    <div class="options" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Próxima pergunta ▸</button>
+  </div>
+
+  <div id="result" class="result">
+    <div class="score-ring" id="ring"><span id="scoreTxt"></span></div>
+    <h2 id="rTitle"></h2>
+    <p id="rMsg"></p>
+    <button class="next-btn" style="display:block" onclick="location.reload()">Refazer o quiz ↻</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    "q": "O que é uma ordem a mercado (Market Order)?",
+    "opts": [
+      "Uma ordem que fica agendada à espera de um preço específico",
+      "Uma ordem que executa já, ao preço atual do mercado",
+      "Uma ordem que só funciona no MetaTrader",
+      "Uma ordem que cancela automaticamente outra posição aberta"
+    ],
+    "a": 1,
+    "exp": "A mercado executa imediatamente, ao preço que está disponível agora — usa-se quando o sinal de entrada já está confirmado e não há tempo a perder."
+  },
+  {
+    "q": "Quando faz mais sentido usar uma ordem pendente (Limit/Stop) em vez de a mercado?",
+    "opts": [
+      "Quando o plano é entrar num nível de preço que o mercado ainda não tocou",
+      "Quando queres entrar imediatamente, custe o que custar",
+      "Quando não sabes qual é o teu Stop Loss",
+      "Nunca — ordens pendentes não são usadas em trading"
+    ],
+    "a": 0,
+    "exp": "A ordem pendente fica à espera: agenda-se a entrada para um preço específico ainda não tocado, em vez de forçar a entrada no preço atual."
+  },
+  {
+    "q": "No momento de abrir uma posição, o que é o Lote?",
+    "opts": [
+      "O nome do par de moedas ou ativo",
+      "Um tipo de gráfico",
+      "O que define o tamanho da posição e o valor por ponto",
+      "A hora exata da entrada"
+    ],
+    "a": 2,
+    "exp": "O lote determina o tamanho da posição — e, por consequência, quanto vale cada ponto de movimento a favor ou contra."
+  },
+  {
+    "q": "Quando devem ser definidos o Stop Loss e o Take Profit de uma posição?",
+    "opts": [
+      "Só depois de a posição já estar em lucro",
+      "Já no momento da entrada, não depois",
+      "Só se o mercado começar a mover contra",
+      "Nunca é necessário definir os dois ao mesmo tempo"
+    ],
+    "a": 1,
+    "exp": "SL e TP fazem parte do plano da entrada, não uma decisão para 'mais tarde' — definir depois é normalmente sinal de que a posição foi aberta sem plano."
+  },
+  {
+    "q": "Qual é a regra prática mencionada sobre abrir uma posição?",
+    "opts": [
+      "Nunca abrir uma posição sem Stop Loss definido",
+      "Abrir sempre o maior lote possível",
+      "Só abrir posições com ordens pendentes",
+      "Abrir sempre no início da sessão de Londres"
+    ],
+    "a": 0,
+    "exp": "Abrir sem Stop Loss definido significa não ter um limite claro de risco antes de a operação começar — é a regra prática mais direta da aula sobre abertura."
+  },
+  {
+    "q": "O que caracteriza um fechamento AUTOMÁTICO de posição?",
+    "opts": [
+      "O trader decide fechar por impulso, sem motivo definido",
+      "A posição fecha quando o SL ou o TP são atingidos, sem decisão no momento",
+      "A corretora fecha a posição por falta de margem",
+      "O gráfico muda de timeframe"
+    ],
+    "a": 1,
+    "exp": "Fechamento automático é o SL ou o TP a serem atingidos — o resultado já estava definido desde a entrada, não há decisão a tomar naquele instante."
+  },
+  {
+    "q": "O que exige um fechamento MANUAL, segundo a regra prática da aula?",
+    "opts": [
+      "Não exige nada, pode ser feito a qualquer momento sem razão",
+      "Só pode ser feito se a posição estiver em prejuízo",
+      "Um motivo claro, não impulso",
+      "Autorização prévia da corretora"
+    ],
+    "a": 2,
+    "exp": "Fechar manualmente antes do SL/TP é uma decisão discricionária — e por isso precisa de um motivo concreto para justificar sair do plano original, não uma reação emocional."
+  },
+  {
+    "q": "O que é 'fechar parcial' numa posição?",
+    "opts": [
+      "Fechar a posição inteira de uma vez",
+      "Cancelar a ordem antes de ser executada",
+      "Realizar parte do lucro já e deixar o resto da posição correr a favor da tendência",
+      "Aumentar o tamanho do lote a meio da operação"
+    ],
+    "a": 2,
+    "exp": "A parcial realiza uma parte do ganho na hora, mantendo o volume restante exposto para capturar mais movimento a favor, sem abrir mão de todo o lucro já feito."
+  },
+  {
+    "q": "Depois de fazer uma parcial, qual é o próximo passo típico de gestão?",
+    "opts": [
+      "Fechar imediatamente o resto da posição também",
+      "Mover o Stop Loss para Breakeven, eliminando o risco no volume que ainda está aberto",
+      "Aumentar o lote da parte restante",
+      "Remover o Take Profit definitivamente"
+    ],
+    "a": 1,
+    "exp": "Mover o stop para breakeven depois da parcial protege o que já foi ganho: se o preço reverter, a pior hipótese passa a ser sair sem perda no volume restante."
+  },
+  {
+    "q": "O que significa 'ajustar o Take Profit' (trailing) durante a gestão da operação?",
+    "opts": [
+      "Reduzir o Take Profit para fechar mais cedo, sempre",
+      "Mover o alvo para mais longe se a tendência mostrar força extra",
+      "Apagar o Take Profit e deixar a posição sem saída definida",
+      "Só é possível fazer isso antes de abrir a posição"
+    ],
+    "a": 1,
+    "exp": "Ajustar o TP para acompanhar a força do movimento (trailing) permite capturar mais lucro quando a tendência continua a confirmar-se, sem voltar a expor a posição a risco desnecessário."
+  },
+  {
+    "q": "Segundo o ponto-chave da aula, o que significa 'gerir' uma posição?",
+    "opts": [
+      "Abrir e esperar, sem tocar em nada até ao fim",
+      "Ajustar a operação à medida que o mercado confirma ou desmente a leitura inicial",
+      "Fechar sempre no primeiro sinal de lucro",
+      "Ignorar o Stop Loss depois da entrada"
+    ],
+    "a": 1,
+    "exp": "Gerir não é passivo — é reagir com regras (parcial, breakeven, trailing) conforme o mercado vai confirmando ou contradizendo a ideia original da entrada."
+  },
+  {
+    "q": "Qual é a sequência lógica resumida na síntese da aula?",
+    "opts": [
+      "Gestão ativa → Risco definido → Ordem certa",
+      "Ordem certa → Risco definido → Gestão ativa",
+      "Risco definido → Gestão ativa → Ordem certa",
+      "Não existe uma ordem lógica entre estes passos"
+    ],
+    "a": 1,
+    "exp": "Primeiro escolhe-se o tipo de ordem certo para entrar, depois define-se o risco (lote + SL/TP) já na abertura, e só depois entra a gestão ativa (parciais, breakeven, ajustes) até ao fecho."
+  }
+];
+
+let idx = 0, score = 0;
+
+function startQuiz() {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  render();
+}
+
+function render() {
+  const q = QUESTIONS[idx];
+  document.getElementById('bar').style.width = (idx / QUESTIONS.length * 100) + '%';
+  document.getElementById('plabel').textContent = 'Pergunta ' + (idx + 1) + ' de ' + QUESTIONS.length;
+  document.getElementById('qtext').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'option';
+    b.textContent = o;
+    b.onclick = () => answer(i, b);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function answer(i, btn) {
+  const q = QUESTIONS[idx];
+  const buttons = document.querySelectorAll('.option');
+  buttons.forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.a) b.classList.add('correct');
+    else if (j === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fb = document.getElementById('fb');
+  if (i === q.a) {
+    score++;
+    fb.className = 'feedback ok';
+    fb.innerHTML = '<strong>✅ Certo!</strong> ' + q.exp;
+  } else {
+    fb.className = 'feedback ko';
+    fb.innerHTML = '<strong>❌ Não é essa.</strong> ' + q.exp;
+  }
+  const nb = document.getElementById('nextBtn');
+  nb.style.display = 'block';
+  nb.textContent = (idx === QUESTIONS.length - 1) ? 'Ver resultado ▸' : 'Próxima pergunta ▸';
+}
+
+function nextQuestion() {
+  idx++;
+  if (idx < QUESTIONS.length) { render(); return; }
+  document.getElementById('quiz').style.display = 'none';
+  const res = document.getElementById('result');
+  res.style.display = 'block';
+  const pct = Math.round(score / QUESTIONS.length * 100);
+  document.getElementById('ring').style.setProperty('--pct', pct);
+  document.getElementById('scoreTxt').textContent = score + '/' + QUESTIONS.length;
+  let t, m;
+  if (pct === 100)      { t = '🏆 Perfeito!';          m = 'Dominaste completamente esta aula. Estás pronto para a próxima.'; }
+  else if (pct >= 80)   { t = '🔥 Excelente!';          m = 'Quase tudo certo. Revê só as perguntas que falhaste e está feito.'; }
+  else if (pct >= 60)   { t = '👍 Bom trabalho!';       m = 'Já tens a base. Vale a pena reler os slides de revisão desta aula antes de avançar.'; }
+  else                  { t = '📚 Continua a estudar!'; m = 'Sem pressa — revê os slides e o resumo da aula e refaz o quiz. Aprender bem é mais importante que aprender rápido.'; }
+  document.getElementById('rTitle').textContent = t;
+  document.getElementById('rMsg').textContent = m;
+}
+</script>
+</body>
+</html>
